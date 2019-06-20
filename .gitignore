@@ -1,0 +1,6 @@
+anaconda-mode/
+auto-save-list/
+.lsp-session-v1
+recentf
+smex-items
+*.elc

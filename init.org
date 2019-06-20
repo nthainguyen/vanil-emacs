@@ -1,0 +1,304 @@
+#+TITLE: Emacs configuration file
+#+AUTHOR: Nguyen Tien Hai
+#+BABEL: :cache yes
+#+PROPERTY: header-args :tangle ~/.emacs.d/init.el
+#+BEGIN_SRC emacs-lisp
+;;; -*- lexical-binding: t -*-
+#+END_SRC
+* Configurations
+** Tangle & byte compile
+Tangle and byte compile
+#+BEGIN_SRC emacs-lisp :tangle yes
+(defun my--tangle-byte-compile-org ()
+ "Tangles emacs.org and byte compiles ~/.emacs.d/"
+   (interactive)
+   (when (equal (buffer-name)
+                (concat "init.org"))
+     (org-babel-tangle)
+     (byte-recompile-directory (expand-file-name user-emacs-directory) 0)))
+#+END_SRC
+Tangle
+#+BEGIN_SRC emacs-lisp 
+(defun my--tangle-org ()
+ "Tangles emacs.org and byte compiles ~/.emacs.d/"
+   (interactive)
+   (when (equal (buffer-name)
+                (concat "init.org"))
+     (org-babel-tangle)))
+(add-hook 'after-save-hook #'my--tangle-org)
+#+END_SRC
+** Initialize package 
+#+BEGIN_SRC emacs-lisp
+(require 'package)
+(let* ((no-ssl (and (memq system-type '(windows-nt ms-dos))
+                 (not (gnutls-available-p))))
+    (proto (if no-ssl "http" "https")))
+    (add-to-list 'package-archives (cons "melpa" (concat proto "://melpa.org/packages/")) t)
+    ;;(add-to-list 'package-archives (cons "melpa-stable" (concat proto "://stable.melpa.org/packages/")) t)
+    (when (< emacs-major-version 24)
+    ;; For important compatibility libraries like cl-lib
+(add-to-list 'package-archives '("gnu" . (concat proto "://elpa.gnu.org/packages/")))
+(add-to-list 'package-archives '("org" . (concat proto "://orgmode.org/elpa/")))))
+(package-initialize)
+#+END_SRC
+** Sane defaults
+*** I don't care about auto save and backup files.
+#+BEGIN_SRC emacs-lisp
+  (use-package nimbus-theme)
+  (setq make-backup-files nil) ; stop creating backup~ files
+  (setq auto-save-default nil) ; stop creating #autosave# files
+  (setq create-lockfiles nil)  ; stop creating .# files
+  (global-auto-revert-mode t)
+  (menu-bar-mode -1)
+  (tool-bar-mode -1)
+  (scroll-bar-mode -1)
+  (transient-mark-mode 1)
+  (delete-selection-mode 1)
+  (global-unset-key (kbd "s-p"))
+  (global-hl-line-mode 0)
+  (add-hook 'org-capture-mode-hook #'visual-line-mode)
+  (global-display-line-numbers-mode)
+  (setq
+   cursor-in-non-selected-windows t  ; Hide the cursor in inactive windows
+   inhibit-splash-screen t
+   default-frame-alist '((font . "Source Code Pro-9"))
+   display-line-numbers-type 'relative
+   echo-keystrokes 0.1               ; Show keystrokes right away, don't show the message in the scratch buffe
+   initial-scratch-message nil       ; Empty scratch buffer
+   initial-major-mode 'org-mode      ; org mode by default
+   sentence-end-double-space nil     ; Sentences should end in one space, come on!
+   confirm-kill-emacs 'y-or-n-p      ; y and n instead of yes and no when quitting
+  )
+  (fset 'yes-or-no-p 'y-or-n-p)      ; y and n instead of yes and no everywhere else
+  (setq scroll-margin 10
+     scroll-step 1
+     next-line-add-newlines nil
+     scroll-conservatively 10000
+     scroll-preserve-screen-position 1)
+  (setq mouse-wheel-follow-mouse 't)
+  (setq mouse-wheel-scroll-amount '(1 ((shift) . 1)))
+  (setq custom-safe-themes t)
+#+END_SRC
+#+BEGIN_SRC emacs-lisp
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
+(eval-when-compile (require 'use-package))
+(setq use-package-always-ensure t)
+(eval-when-compile
+  (setq use-package-expand-minimally byte-compile-current-file))
+#+END_SRC
+
+*** Load Winum for window management
+#+BEGIN_SRC emacs-lisp
+(use-package winum :ensure t
+:config
+(winum-mode t))
+#+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package general
+    :ensure t)
+#+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package which-key :ensure t
+    :config
+    (which-key-mode)
+    (which-key-setup-minibuffer))
+#+END_SRC
+* Python
+#+BEGIN_SRC emacs-lisp
+;; Check if system is Microsoft Windows
+(defun my-system-type-is-windows ()
+  "Return true if system is Windows-based (at least up to Win7)"
+  (string-equal system-type "windows-nt")
+  )
+
+;; Check if system is GNU/Linux
+(defun my-system-type-is-gnu ()
+  "Return true if system is GNU/Linux-based"
+  (string-equal system-type "gnu/linux")
+  )
+#+END_SRC
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (use-package anaconda-mode 
+  :if (my-system-type-is-windows)
+  :ensure t)
+  (use-package company-anaconda 
+  :if (my-system-type-is-windows)
+  :ensure t)
+  (use-package company :ensure t
+      :diminish company-mode "Co"
+      :init
+      (eval-after-load "company"
+      '(add-to-list 'company-backends 'company-anaconda))
+      :config
+      (setq company-idle-delay 0.1)
+      (global-company-mode))
+  (use-package realgud
+    :if (my-system-type-is-windows)
+    :ensure t)
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (use-package lsp-ui :if (my-system-type-is-gnu) :ensure t :commands lsp-ui-mode)
+  (use-package lsp-mode :if (my-system-type-is-gnu) :ensure t)
+  (use-package company-lsp :if (my-system-type-is-gnu) :ensure t :commands company-lsp)
+  (when (my-system-type-is-gnu)
+      (push 'company-lsp company-backends)
+      (load-file "~/.emacs.d/elpa/lsp-python-ms.el")
+      (require 'lsp-python-ms)
+  (add-hook 'python-mode-hook #'lsp)
+  )
+  (use-package lsp-python-ms
+    :if (my-system-type-is-gnu)
+    :ensure nil
+    :config
+      (setq lsp-python-ms-dir
+	(expand-file-name "~/python-language-server/output/bin/Release/")))
+#+END_SRC
+* Treemacs
+#+BEGIN_SRC emacs-lisp
+   (use-package treemacs
+      :ensure t
+      :defer t
+      :init
+      (with-eval-after-load 'winum
+        (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
+      :config
+      (progn
+        (setq treemacs-collapse-dirs                 (if (executable-find "python3") 3 0)
+              treemacs-deferred-git-apply-delay      0.5
+              treemacs-display-in-side-window        t
+              treemacs-eldoc-display                 t
+              treemacs-file-event-delay              5000
+              treemacs-file-follow-delay             0.2
+              treemacs-follow-after-init             t
+              treemacs-git-command-pipe              ""
+              treemacs-goto-tag-strategy             'refetch-index
+              treemacs-indentation                   2
+              treemacs-indentation-string            " "
+              treemacs-is-never-other-window         nil
+              treemacs-max-git-entries               5000
+              treemacs-missing-project-action        'ask
+              treemacs-no-png-images                 nil
+              treemacs-no-delete-other-windows       t
+              treemacs-project-follow-cleanup        nil
+              treemacs-persist-file                  (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
+              treemacs-recenter-distance             0.1
+              treemacs-recenter-after-file-follow    nil
+              treemacs-recenter-after-tag-follow     nil
+              treemacs-recenter-after-project-jump   'always
+              treemacs-recenter-after-project-expand 'on-distance
+              treemacs-show-cursor                   nil
+              treemacs-show-hidden-files             t
+              treemacs-silent-filewatch              nil
+              treemacs-silent-refresh                nil
+              treemacs-sorting                       'alphabetic-desc
+              treemacs-space-between-root-nodes      t
+              treemacs-tag-follow-cleanup            t
+              treemacs-tag-follow-delay              1.5
+              treemacs-width                         20)
+
+        ;; The default width and height of the icons is 22 pixels. If you are
+        ;; using a Hi-DPI display, uncomment this to double the icon size.
+        ;;(treemacs-resize-icons 44)
+
+        (treemacs-follow-mode t)
+        (treemacs-filewatch-mode t)
+        (treemacs-fringe-indicator-mode t)
+        (pcase (cons (not (null (executable-find "git")))
+                     (not (null (executable-find "python3"))))
+          (`(t . t)
+           (treemacs-git-mode 'deferred))
+          (`(t . _)
+           (treemacs-git-mode 'simple))))
+      :bind
+      (:map global-map
+            ("M-0"       . treemacs-select-window)
+            ("C-x t 1"   . treemacs-delete-other-windows)
+            ("C-x t t"   . treemacs)
+            ("C-x t B"   . treemacs-bookmark)
+            ("C-x t C-t" . treemacs-find-file)
+            ("C-x t M-t" . treemacs-find-tag)))
+    (use-package treemacs-projectile
+      :after treemacs projectile
+      :ensure t)
+#+END_SRC
+* ivy
+#+BEGIN_SRC emacs-lisp
+  (use-package ace-window :ensure t)
+  (use-package ivy
+    :ensure t
+    :diminish ivy-mode
+    :config
+    (ivy-mode 1)
+    (setq ivy-use-virtual-buffers t)
+    (setq ivy-count-format "(%d/%d) ")
+    (setq enable-recursive-minibuffers t)
+    (setq ivy-initial-inputs-alist nil)
+    (setq ivy-re-builders-alist
+	'((swiper . ivy--regex-plus)
+	  (t      . ivy--regex-fuzzy))))
+  (use-package counsel
+    :ensure t
+    :diminish counsel-mode
+    :config
+    (counsel-mode 1))
+  (use-package smex :ensure t)
+  (use-package flx :ensure t)
+  (use-package avy :ensure t)
+#+END_SRC
+** Yasnippet
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (use-package yasnippet :ensure t
+    :init
+    (yas-global-mode 1)
+    :config
+    (use-package yasnippet-snippets
+      :ensure t)
+    (setq yas-snippet-dirs
+      '("~/.emacs.d/snippets")))
+#+END_SRC
+** Pyvenv
+   #+BEGIN_SRC emacs-lisp
+     (use-package pyvenv :ensure t)
+     (setq exec-path (append exec-path '("C:\\Users\\VNHANGU19\\AppData\\Local\\Programs\\Python\\Python37-32"))) 
+   #+END_SRC
+* Org takenote
+#+BEGIN_SRC emacs-lisp
+    (use-package deft
+      :init (setq deft-directory "~/Dropbox/Archives"
+                    deft-text-mode 'org-mode
+                    deft-extensions '("org")
+                    deft-recursive t
+                    deft-use-filename-as-title nil))
+  (setq deft-file-naming-rules
+        '((noslash . "-")
+          (nospace . "-")
+          (case-fn . downcase)))
+  (setq deft-org-mode-title-prefix t)
+  (use-package zetteldeft
+    :load-path "~/.emacs.d/zetteldeft/"
+    :after deft)
+  (use-package helm-org-rifle
+    :ensure t)
+  (defun hai/helm-org-rifle-archives ()
+    "Rifle through Archives folder"
+    (interactive)
+    (helm-org-rifle-directories "~/Dropbox/Archives"))
+  (setq helm-mode-fuzzy-match t)
+  (setq helm-completion-in-region-fuzzy-match t)
+  (use-package org-noter
+    :ensure t)
+  (pdf-tools-install)
+  (use-package helm-ag
+    :ensure t)
+#+END_SRC
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (use-package dap-mode
+    :ensure t
+    )
+  (require 'dap-python)
+  (add-hook 'python-mode-hook #'dap-ui-mode)
+  (add-hook 'lsp-ui-mode-hook #'lsp-ui-imenu)
+#+END_SRC
