@@ -267,12 +267,14 @@ Tangle
 * Org takenote
 #+BEGIN_SRC emacs-lisp
     (use-package deft
+      :bind ("C-x d" . deft)
+      :commands (deft)
       :init (setq deft-directory "~/Dropbox/Archives"
                     deft-text-mode 'org-mode
                     deft-extensions '("org")
                     deft-recursive t
                     deft-use-filename-as-title nil))
-  (setq deft-file-naming-rules
+   (setq deft-file-naming-rules
         '((noslash . "-")
           (nospace . "-")
           (case-fn . downcase)))
@@ -299,6 +301,7 @@ Tangle
     :ensure t
     )
   (require 'dap-python)
+  (setq dap-python-executable "konsole -e python")
   (add-hook 'python-mode-hook #'dap-ui-mode)
   (add-hook 'lsp-ui-mode-hook #'lsp-ui-imenu)
-#+END_SRC
+#+END_SRC 
