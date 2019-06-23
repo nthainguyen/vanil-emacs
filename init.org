@@ -427,7 +427,7 @@ Tangle
    "C-c d" 'deadgrep
    "C-x m" 'magit-status)
   (general-define-key
-   :states '(normal visual emacs)
+   :states '(normal visual)
    :prefix "SPC"
    "d" '(:ignore t :which-key "zetteldeft")
    "dn" 'zd-new-fine
