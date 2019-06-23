@@ -45,6 +45,15 @@ Tangle
 *** I don't care about auto save and backup files.
 #+BEGIN_SRC emacs-lisp
   (use-package nimbus-theme)
+  (nimbus-theme)
+  (use-package spaceline
+    :ensure t
+    :config
+    (require 'spaceline-config)
+    (spaceline-spacemacs-theme))
+  (setq org-src-tab-acts-natively t)
+  (setq org-src-preserve-indentation t)
+  (setq org-src-fontify-natively t)
   (setq make-backup-files nil) ; stop creating backup~ files
   (setq auto-save-default nil) ; stop creating #autosave# files
   (setq create-lockfiles nil)  ; stop creating .# files
@@ -61,7 +70,7 @@ Tangle
   (setq
    cursor-in-non-selected-windows t  ; Hide the cursor in inactive windows
    inhibit-splash-screen t
-   default-frame-alist '((font . "iA Writer Duospace-9"))
+   default-frame-alist '((font . "Source Code Pro-9"))
    display-line-numbers-type 'relative
    echo-keystrokes 0.1               ; Show keystrokes right away, don't show the message in the scratch buffe
    initial-scratch-message nil       ; Empty scratch buffer
@@ -119,6 +128,89 @@ Tangle
   (string-equal system-type "gnu/linux")
   )
 #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package projectile
+    :ensure t)
+  (use-package treemacs
+    :ensure t
+    :defer t
+    :init
+    (with-eval-after-load 'winum
+      (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
+    :config
+    (progn
+      (setq treemacs-collapse-dirs                 (if (executable-find "python3") 3 0)
+	    treemacs-deferred-git-apply-delay      0.5
+	    treemacs-display-in-side-window        t
+	    treemacs-eldoc-display                 t
+	    treemacs-file-event-delay              5000
+	    treemacs-file-follow-delay             0.2
+	    treemacs-follow-after-init             t
+	    treemacs-git-command-pipe              ""
+	    treemacs-goto-tag-strategy             'refetch-index
+	    treemacs-indentation                   2
+	    treemacs-indentation-string            " "
+	    treemacs-is-never-other-window         nil
+	    treemacs-max-git-entries               5000
+	    treemacs-missing-project-action        'ask
+	    treemacs-no-png-images                 nil
+	    treemacs-no-delete-other-windows       t
+	    treemacs-project-follow-cleanup        nil
+	    treemacs-persist-file                  (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
+	    treemacs-recenter-distance             0.1
+	    treemacs-recenter-after-file-follow    nil
+	    treemacs-recenter-after-tag-follow     nil
+	    treemacs-recenter-after-project-jump   'always
+	    treemacs-recenter-after-project-expand 'on-distance
+	    treemacs-show-cursor                   nil
+	    treemacs-show-hidden-files             t
+	    treemacs-silent-filewatch              nil
+	    treemacs-silent-refresh                nil
+	    treemacs-sorting                       'alphabetic-desc
+	    treemacs-space-between-root-nodes      t
+	    treemacs-tag-follow-cleanup            t
+	    treemacs-tag-follow-delay              1.5
+	    treemacs-width                         35)
+
+      ;; The default width and height of the icons is 22 pixels. If you are
+      ;; using a Hi-DPI display, uncomment this to double the icon size.
+      ;;(treemacs-resize-icons 44)
+
+      (treemacs-follow-mode t)
+      (treemacs-filewatch-mode t)
+      (treemacs-fringe-indicator-mode t)
+      (pcase (cons (not (null (executable-find "git")))
+		   (not (null (executable-find "python3"))))
+	(`(t . t)
+	 (treemacs-git-mode 'deferred))
+	(`(t . _)
+	 (treemacs-git-mode 'simple))))
+    :bind
+    (:map global-map
+	  ("M-0"       . treemacs-select-window)
+	  ("C-x t 1"   . treemacs-delete-other-windows)
+	  ("C-x t t"   . treemacs)
+	  ("C-x t B"   . treemacs-bookmark)
+	  ("C-x t C-t" . treemacs-find-file)
+	  ("C-x t M-t" . treemacs-find-tag)))
+
+  (use-package treemacs-evil
+    :after treemacs evil
+    :ensure t)
+
+  (use-package treemacs-projectile
+    :after treemacs projectile
+    :ensure t)
+
+  (use-package treemacs-icons-dired
+    :after treemacs dired
+    :ensure t
+    :config (treemacs-icons-dired-mode))
+
+  (use-package treemacs-magit
+    :after treemacs magit
+    :ensure t)
+#+END_SRC
 ** Python anaconda for python on windows
 #+BEGIN_SRC emacs-lisp :tangle yes
   (use-package python
@@ -143,7 +235,7 @@ Tangle
 	    company-minimum-prefix-length 2)
       (global-company-mode))
   (use-package realgud
-    :if (my-system-type-is-windows)
+;;    :if (my-system-type-is-windows)
     :ensure t)
 #+END_SRC
 ** Language server protocol for linux
@@ -184,6 +276,10 @@ Tangle
     :diminish counsel-mode
     :config
     (counsel-mode 1))
+  (use-package counsel-projectile
+    :ensure t
+    :config
+    (counsel-projectile-mode))
   (use-package smex :ensure t)
   (use-package flx :ensure t)
   (use-package avy :ensure t)
@@ -203,6 +299,19 @@ Tangle
    #+BEGIN_SRC emacs-lisp
      (use-package pyvenv :ensure t)
      (setq exec-path (append exec-path '("C:\\Users\\VNHANGU19\\AppData\\Local\\Programs\\Python\\Python37-32"))) 
+     (defun spacemacs//pyvenv-mode-set-local-virtualenv ()
+       "Set pyvenv virtualenv from \".venv\" by looking in parent directories."
+       (interactive)
+       (let ((root-path (locate-dominating-file default-directory
+						"venv")))
+	 (when root-path
+	   (let* ((file-path (expand-file-name "venv" root-path))
+		  (virtualenv
+		   (with-temp-buffer
+		     (insert-file-contents-literally file-path)
+		     (buffer-substring-no-properties (line-beginning-position)
+						     (line-end-position)))))
+		 (pyvenv-workon virtualenv)))))
    #+END_SRC
 * Org takenote
 #+BEGIN_SRC emacs-lisp
@@ -241,23 +350,105 @@ Tangle
     :ensure t
     )
   (require 'dap-python)
-  (setq dap-python-executable "konsole -e python")
+  (setq dap-python-executable "urxvt -hold -e python")
   (add-hook 'python-mode-hook #'dap-ui-mode)
-  (add-hook 'lsp-ui-mode-hook #'lsp-ui-imenu)
 #+END_SRC 
+#+BEGIN_SRC emacs-lisp
+  (defun air-pop-to-org-agenda (split)
+    "Visit the org agenda, in the current window or a SPLIT."
+    (interactive "P")
+    (org-agenda)
+    (when (not split)
+      (delete-other-windows)))
+
+  (use-package org
+    :init
+  (add-to-list 'auto-mode-alist '("\\.org$" . org-mode))
+    :config
+  (setq org-use-speed-commands t)
+  (setq org-treat-S-cursor-todo-selection-as-state-change nil)
+  (setq org-directory "~/Nextcloud/gtd")
+  (add-to-list 'org-modules 'org-habit)
+  (add-to-list 'org-modules 'org-protocol)
+  (require 'org-protocol)
+  (setq org-default-notes-file "~/Nextcloud/gtd/inbox.org")
+  (defadvice org-capture-finalize
+      (after delete-capture-frame activate)
+    "Advise capture-finalize to close the frame"
+    (if (equal "CAPTURE" (frame-parameter nil 'name))
+	(delete-frame)))
+  (add-hook 'org-mode-hook 'visual-line-mode)
+  :general
+  (:keymaps 'org-agenda-mode-map
+   :states  '(normal emacs)
+   :prefix ","
+   "RET"    'org-agenda-switch-to
+   "ESC"    'org-agenda-kill
+   "q"      'org-agenda-quit
+   "m"      'org-agenda-month-view
+   "r"      'org-agenda-refile
+   "f"      'org-agenda-filter-by-tag)
+
+  (:keymaps 'org-mode-map
+   :states  '(normal emacs)
+   :prefix ","
+      "c" '(org-capture :which-key "Capture")
+      "r" '(:ignore t :which-key "refile templates")
+      "rg"'((lambda() (interactive)(my/refile "gtd.org" "GTD")) :which-key "GTD")
+      "R" '(org-refile :which-key "refile without template")
+      ","  "C-c C-c"
+      "a" '(org-archive-subtree-default :which-key "Archive this")
+      ;;"A" '(org-agenda :which-key "Agenda")
+      "l" "C-c C->"
+      "h" "C-c C-<"
+      "T" 'org-todo
+      "t" 'org-set-tags
+      "p" '(:ignore t :wk "link")
+      "pl"'(org-store-link :wk "create link and save")
+      "pi"'(org-insert-link :wk "insert link")
+      "po"'(org-open-at-point :wk "open link")
+      "A" 'air-pop-to-org-agenda
+      "n" '(:ignore t :wk "Narrow")
+      "nb"'org-narrow-to-block
+      "nt"'org-narrow-to-subtree
+      "ni" 'narrow-or-widen-dwim
+      "nw" 'widen
+      "ne"'org-narrow-to-element
+  ))
+#+END_SRC
 * Keybinding with general
 #+BEGIN_SRC emacs-lisp
   (general-define-key
-   :keymap 'global
-   "C-s" 'swiper
+   :states '(normal visual insert emacs)
+   "C-f" 'swiper
+   "C-s" 'save-buffer
    "C-r" nil
-   "<f5>" 'deadgrep
+   "C-c p" 'projectile-command-map
+   "C-c d" 'deadgrep
    "C-x m" 'magit-status)
   (general-define-key
-   :keymap 'global
-   :prefix "<f6>"
-   "c" '(lambda() (interactive)(org-capture nil "t"))
-   )
+   :states '(normal visual emacs)
+   :prefix "SPC"
+   "d" '(:ignore t :which-key "zetteldeft")
+   "dn" 'zd-new-fine
+   "dN" 'zd-new-file-and-link
+   "dt" 'zd-avy-tag-search
+   "df" 'zd-follow-link
+   "dF" 'zd-get-thing-at-point
+   "dr"  'zd-file-rename)
+#+END_SRC
+* Evil
+#+BEGIN_SRC emacs-lisp
+  (use-package evil
+    :ensure t
+    :init
+    (setq evil-want-keybinding nil))
+    (evil-mode)
+  (use-package evil-collection
+  :after evil  
+  :ensure t
+  :config
+  (evil-collection-init))
 #+END_SRC
 * Uncategorized
 ** Deadgrep
@@ -271,4 +462,55 @@ Tangle
   (use-package magit
     :ensure t
     :defer t)
+#+END_SRC
+** Smartparents
+#+BEGIN_SRC emacs-lisp
+  (use-package smartparens
+    :ensure t
+    :config
+    (add-hook 'lisp-mode-hook #'smartparens-mode)
+    (add-hook 'python-mode-hook #'smartparens-mode)
+    (add-hook 'org-mode-hook #'smartparens-mode))
+  (defmacro def-pairs (pairs)
+    "Define functions for pairing. PAIRS is an alist of (NAME . STRING)
+  conses, where NAME is the function name that will be created and
+  STRING is a single-character string that marks the opening character.
+
+    (def-pairs ((paren . \"(\")
+		(bracket . \"[\"))
+
+  defines the functions WRAP-WITH-PAREN and WRAP-WITH-BRACKET,
+  respectively."
+    `(progn
+       ,@(loop for (key . val) in pairs
+	       collect
+	       `(defun ,(read (concat
+			       "wrap-with-"
+			       (prin1-to-string key)
+			       "s"))
+		    (&optional arg)
+		  (interactive "p")
+		  (sp-wrap-with-pair ,val)))))
+
+  (def-pairs ((paren . "(")
+	      (bracket . "[")
+	      (brace . "{")
+	      (single-quote . "'")
+	      (double-quote . "\"")
+	      (back-quote . "`")))
+(general-define-key
+ :keymap 'smartparens-mode-map
+ "C-c ("   'wrap-with-parens
+ "C-c ["   'wrap-with-brackets
+ "C-c {"   'wrap-with-braces
+ "C-c '"   'wrap-with-single-quotes
+ "C-c \""  'wrap-with-double-quotes
+ "C-c _"   'wrap-with-underscores
+ "C-c `"   'wrap-with-back-quotes)
+#+END_SRC
+
+** Diminish
+#+BEGIN_SRC emacs-lisp
+(use-package diminish
+ :ensure t)
 #+END_SRC

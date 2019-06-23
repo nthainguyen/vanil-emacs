@@ -1,5 +1,5 @@
-;;; lsp-python-ms.el --- lsp-mode client for Microsoft python-language-server -*- lexical-binding: t -*-
 
+;;; lsp-python-ms.el --- lsp-mode client for Microsoft python-language-server -*- lexical-binding: t -*-
 ;; Author: Charl Botha
 ;; Maintainer: Andrew Christianson
 ;; Version: 0.1.0
