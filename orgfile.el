@@ -48,7 +48,6 @@
 
 ; Use IDO for both buffer and file completion and ido-everywhere to t
 (setq org-completion-use-ido t)
-(setq ido-everywhere t)
 (setq ido-max-directory-size 100000)
 (ido-mode (quote both))
 ; Use the current window when visiting files and buffers with ido
@@ -513,11 +512,6 @@ Skip project and sub-project tasks, habits, and loose non-project tasks."
 
 ;; Start the weekly agenda on Monday
 (setq org-agenda-start-on-weekday 1)
-
-;; Enable display of the time grid so we can see the marker for the current time
-(setq org-agenda-time-grid (quote ((daily today remove-match)
-                                   #("----------------" 0 16 (org-heading t))
-                                   (0900 1100 1300 1500 1700))))
 
 ;; Display tags farther right
 (setq org-agenda-tags-column -102)

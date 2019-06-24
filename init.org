@@ -432,6 +432,7 @@ Tangle
    "C-s" 'save-buffer
    "C-r" nil
    "C-c p" 'projectile-command-map
+   "C-x C-f" 'counsel-find-file
    "C-c d" 'deadgrep
    "C-x m" 'magit-status)
   (general-define-key
