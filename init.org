@@ -240,9 +240,17 @@ Tangle
 #+END_SRC
 ** Language server protocol for linux
 #+BEGIN_SRC emacs-lisp :tangle yes
-  (use-package lsp-ui :if (my-system-type-is-gnu) :ensure t :commands lsp-ui-mode)
-  (use-package lsp-mode :if (my-system-type-is-gnu) :ensure t)
-  (use-package company-lsp :if (my-system-type-is-gnu) :ensure t :commands company-lsp)
+  (use-package lsp-ui
+    :if (my-system-type-is-gnu)
+    :ensure t 
+    :commands lsp-ui-mode)
+  (use-package lsp-mode 
+    :if (my-system-type-is-gnu) 
+    :ensure t)
+  (use-package company-lsp 
+    :if (my-system-type-is-gnu) 
+    :ensure t 
+    :commands company-lsp)
   (when (my-system-type-is-gnu)
       (push 'company-lsp company-backends)
       (load-file "~/.emacs.d/elpa/lsp-python-ms.el")
@@ -419,7 +427,7 @@ Tangle
 * Keybinding with general
 #+BEGIN_SRC emacs-lisp
   (general-define-key
-   :states '(normal visual insert emacs)
+   :keymap 'globals
    "C-f" 'swiper
    "C-s" 'save-buffer
    "C-r" nil
@@ -427,28 +435,21 @@ Tangle
    "C-c d" 'deadgrep
    "C-x m" 'magit-status)
   (general-define-key
-   :states '(normal visual)
-   :prefix "SPC"
-   "d" '(:ignore t :which-key "zetteldeft")
-   "dn" 'zd-new-fine
-   "dN" 'zd-new-file-and-link
-   "dt" 'zd-avy-tag-search
-   "df" 'zd-follow-link
-   "dF" 'zd-get-thing-at-point
-   "dr"  'zd-file-rename)
+   :keymap 'globals
+   "C-c z n" 'zd-new-fine
+   "C-c z N" 'zd-new-file-and-link
+   "C-c z t" 'zd-avy-tag-search
+   "C-c z f" 'zd-follow-link
+   "C-c z F" 'zd-get-thing-at-point
+   "C-c z r" 'zd-file-rename)
 #+END_SRC
 * Evil
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package evil
     :ensure t
     :init
     (setq evil-want-keybinding nil))
     (evil-mode)
-  (use-package evil-collection
-  :after evil  
-  :ensure t
-  :config
-  (evil-collection-init))
 #+END_SRC
 * Uncategorized
 ** Deadgrep
@@ -471,6 +472,8 @@ Tangle
     (add-hook 'lisp-mode-hook #'smartparens-mode)
     (add-hook 'python-mode-hook #'smartparens-mode)
     (add-hook 'org-mode-hook #'smartparens-mode))
+(if (my-system-type-is-windows)
+    (require 'cl))
   (defmacro def-pairs (pairs)
     "Define functions for pairing. PAIRS is an alist of (NAME . STRING)
   conses, where NAME is the function name that will be created and
@@ -508,7 +511,6 @@ Tangle
  "C-c _"   'wrap-with-underscores
  "C-c `"   'wrap-with-back-quotes)
 #+END_SRC
-
 ** Diminish
 #+BEGIN_SRC emacs-lisp
 (use-package diminish
