@@ -258,6 +258,12 @@
    "C-c z F" 'zd-get-thing-at-point
    "C-c z r" 'zd-file-rename)
 
+  (use-package evil
+    :ensure t
+    :init
+    (setq evil-want-keybinding nil))
+    (evil-mode)
+
   (use-package deadgrep
     :ensure t
     :defer t)
@@ -324,3 +330,7 @@
   "Load a file in current user's configuration directory"
   (load-file (expand-file-name file user-init-dir)))
 (load-user-file "orgfile.el")
+
+(use-package hyperbole
+  :ensure t)
+(setq org-refile-use-outline-path 'file)

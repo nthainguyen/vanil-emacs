@@ -295,7 +295,7 @@ Tangle
    "C-c z r" 'zd-file-rename)
 #+END_SRC
 * Evil
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp :tangle yes
   (use-package evil
     :ensure t
     :init
@@ -380,3 +380,9 @@ Tangle
   (load-file (expand-file-name file user-init-dir)))
 (load-user-file "orgfile.el")
 #+END_SRC
+* Hyperbole
+#+begin_src emacs-lisp
+(use-package hyperbole
+  :ensure t)
+(setq org-refile-use-outline-path 'file)
+#+end_src
