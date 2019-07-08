@@ -52,7 +52,7 @@
   (setq
    cursor-in-non-selected-windows t  ; Hide the cursor in inactive windows
    inhibit-splash-screen t
-   default-frame-alist '((font . "Source Code Pro-9"))
+   default-frame-alist '((font . "Source Code Pro-11"))
    display-line-numbers-type 'relative
    echo-keystrokes 0.1               ; Show keystrokes right away, don't show the message in the scratch buffe
    initial-scratch-message nil       ; Empty scratch buffer
@@ -89,6 +89,11 @@
     :config
     (which-key-mode)
     (which-key-setup-minibuffer))
+
+(setq url-proxy-services
+      '(("http"     . "access614.cws.sco.cisco.com:8080")
+        ("https"    . "access614.cws.sco.cisco.com:8080")))
+(setq inhibit-compacting-font-caches t)
 
   (use-package ace-window :ensure t)
   (use-package ivy
@@ -251,18 +256,12 @@
    "C-x m" 'magit-status)
   (general-define-key
    :keymap 'globals
-   "C-c z n" 'zd-new-fine
+   "C-c z n" 'zd-new-file
    "C-c z N" 'zd-new-file-and-link
    "C-c z t" 'zd-avy-tag-search
    "C-c z f" 'zd-follow-link
    "C-c z F" 'zd-get-thing-at-point
    "C-c z r" 'zd-file-rename)
-
-  (use-package evil
-    :ensure t
-    :init
-    (setq evil-want-keybinding nil))
-    (evil-mode)
 
   (use-package deadgrep
     :ensure t
