@@ -51,6 +51,7 @@ Tangle
     :config
     (require 'spaceline-config)
     (spaceline-spacemacs-theme))
+  (add-hook 'focus-out-hook 'save-buffer)
   (setq org-src-tab-acts-natively t)
   (setq org-src-preserve-indentation t)
   (setq org-src-fontify-natively t)
