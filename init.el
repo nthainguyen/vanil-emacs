@@ -26,6 +26,15 @@
 (add-to-list 'package-archives '("org" . (concat proto "://orgmode.org/elpa/")))))
 (package-initialize)
 
+(setq org-refile-use-outline-path 'file)
+(use-package super-save
+  :ensure t
+  :config
+  (super-save-mode +1))
+(setq super-save-auto-save-when-idle t)
+(add-to-list 'super-save-hook-triggers 'focus-out-hook)
+(add-to-list 'super-save-hook-triggers 'find-file-hook)
+(add-to-list 'super-save-triggers 'ace-window)
   (use-package nimbus-theme)
   (nimbus-theme)
   (use-package spaceline
@@ -33,7 +42,6 @@
     :config
     (require 'spaceline-config)
     (spaceline-spacemacs-theme))
-  (add-hook 'focus-out-hook 'save-buffer)
   (setq org-src-tab-acts-natively t)
   (setq org-src-preserve-indentation t)
   (setq org-src-fontify-natively t)
@@ -91,9 +99,6 @@
     (which-key-mode)
     (which-key-setup-minibuffer))
 
-(setq url-proxy-services
-      '(("http"     . "access614.cws.sco.cisco.com:8080")
-        ("https"    . "access614.cws.sco.cisco.com:8080")))
 (setq inhibit-compacting-font-caches t)
 
   (use-package ace-window :ensure t)
@@ -176,75 +181,6 @@
   (pdf-tools-install)
   (use-package helm-ag
     :ensure t)
-
-  (use-package dap-mode
-    :ensure t
-    )
-  (require 'dap-python)
-  (setq dap-python-executable "urxvt -hold -e python")
-  (add-hook 'python-mode-hook #'dap-ui-mode)
-
-  (defun air-pop-to-org-agenda (split)
-    "Visit the org agenda, in the current window or a SPLIT."
-    (interactive "P")
-    (org-agenda)
-    (when (not split)
-      (delete-other-windows)))
-
-  (use-package org
-    :init
-  (add-to-list 'auto-mode-alist '("\\.org$" . org-mode))
-    :config
-  (setq org-use-speed-commands t)
-  (setq org-treat-S-cursor-todo-selection-as-state-change nil)
-  (setq org-directory "~/Nextcloud/gtd")
-  (add-to-list 'org-modules 'org-habit)
-  (add-to-list 'org-modules 'org-protocol)
-  (require 'org-protocol)
-  (setq org-default-notes-file "~/Nextcloud/gtd/inbox.org")
-  (defadvice org-capture-finalize
-      (after delete-capture-frame activate)
-    "Advise capture-finalize to close the frame"
-    (if (equal "CAPTURE" (frame-parameter nil 'name))
-	(delete-frame)))
-  (add-hook 'org-mode-hook 'visual-line-mode)
-  :general
-  (:keymaps 'org-agenda-mode-map
-   :states  '(normal emacs)
-   :prefix ","
-   "RET"    'org-agenda-switch-to
-   "ESC"    'org-agenda-kill
-   "q"      'org-agenda-quit
-   "m"      'org-agenda-month-view
-   "r"      'org-agenda-refile
-   "f"      'org-agenda-filter-by-tag)
-
-  (:keymaps 'org-mode-map
-   :states  '(normal emacs)
-   :prefix ","
-      "c" '(org-capture :which-key "Capture")
-      "r" '(:ignore t :which-key "refile templates")
-      "rg"'((lambda() (interactive)(my/refile "gtd.org" "GTD")) :which-key "GTD")
-      "R" '(org-refile :which-key "refile without template")
-      ","  "C-c C-c"
-      "a" '(org-archive-subtree-default :which-key "Archive this")
-      ;;"A" '(org-agenda :which-key "Agenda")
-      "l" "C-c C->"
-      "h" "C-c C-<"
-      "T" 'org-todo
-      "t" 'org-set-tags
-      "p" '(:ignore t :wk "link")
-      "pl"'(org-store-link :wk "create link and save")
-      "pi"'(org-insert-link :wk "insert link")
-      "po"'(org-open-at-point :wk "open link")
-      "A" 'air-pop-to-org-agenda
-      "n" '(:ignore t :wk "Narrow")
-      "nb"'org-narrow-to-block
-      "nt"'org-narrow-to-subtree
-      "ni" 'narrow-or-widen-dwim
-      "nw" 'widen
-      "ne"'org-narrow-to-element
-  ))
 
   (general-define-key
    :keymap 'globals
@@ -331,6 +267,26 @@
   (load-file (expand-file-name file user-init-dir)))
 (load-user-file "orgfile.el")
 
-(use-package hyperbole
+(use-package lsp-mode
   :ensure t)
-(setq org-refile-use-outline-path 'file)
+(use-package lsp-ui :commands lsp-ui-mode)
+(use-package company-lsp :commands company-lsp)
+(use-package helm-lsp :commands helm-lsp-workspace-symbol)
+(use-package lsp-treemacs :commands lsp-treemacs-errors-list)
+;; optionally if you want to use debugger
+(use-package dap-mode)
+;; (use-package dap-LANGUAGE) to load the dap adapter for your language
+(setq company-idle-delay 0.1
+      company-minimum-prefix-length 2)
+(use-package lsp-python-ms
+  :ensure t
+  :demand
+  :hook (python-mode . lsp))
+  (use-package dap-mode
+    :ensure t
+    )
+  (require 'dap-python)
+  (setq dap-python-executable "urxvt -hold -e python")
+  (add-hook 'python-mode-hook #'dap-ui-mode)
+(use-package ripgrep
+ :ensure t)
