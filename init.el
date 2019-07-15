@@ -1,3 +1,7 @@
+(eval-when-compile
+  (require 'use-package))
+(setq-default gc-cons-threshold 100000000)
+(let ((file-name-handler-alist nil)) "init.el")
 (defun my--tangle-byte-compile-org ()
  "Tangles emacs.org and byte compiles ~/.emacs.d/"
    (interactive)
@@ -27,16 +31,19 @@
 (package-initialize)
 
 (setq org-refile-use-outline-path 'file)
-(use-package super-save
-  :ensure t
+(setq ivy-display-style 'fancy)
+(use-package gcmh
+:ensure t)
+(gcmh-mode)
+(setq garbage-collection-messages t)
+  (use-package kaolin-themes
   :config
-  (super-save-mode +1))
-(setq super-save-auto-save-when-idle t)
-(add-to-list 'super-save-hook-triggers 'focus-out-hook)
-(add-to-list 'super-save-hook-triggers 'find-file-hook)
-(add-to-list 'super-save-triggers 'ace-window)
-  (use-package nimbus-theme)
-  (nimbus-theme)
+  (load-theme 'kaolin-valley-light t))
+  (use-package spaceline
+    :ensure t
+    :config
+    (require 'spaceline-config)
+    (spaceline-spacemacs-theme))  
   (use-package spaceline
     :ensure t
     :config
@@ -65,7 +72,7 @@
    display-line-numbers-type 'relative
    echo-keystrokes 0.1               ; Show keystrokes right away, don't show the message in the scratch buffe
    initial-scratch-message nil       ; Empty scratch buffer
-   initial-major-mode 'org-mode      ; org mode by default
+   initial-major-mode 'fundamental      ; org mode by default
    sentence-end-double-space nil     ; Sentences should end in one space, come on!
    confirm-kill-emacs 'y-or-n-p      ; y and n instead of yes and no when quitting
   )
@@ -88,7 +95,9 @@
   (setq use-package-expand-minimally byte-compile-current-file))
 
 (use-package winum :ensure t
+  :defer t
 :config
+(setq winum-auto-setup-mode-line nil)
 (winum-mode t))
 
   (use-package general
@@ -100,6 +109,10 @@
     (which-key-setup-minibuffer))
 
 (setq inhibit-compacting-font-caches t)
+(setq url-proxy-services '((("no_proxy"
+      . "^\\(localhost\\|10\\..*\\|192\\.168\\..*\\)")
+	  ("http"     . "access614.cws.sco.cisco.com:8080")
+        ("https"    . "access614.cws.sco.cisco.com:8080"))))
 
   (use-package ace-window :ensure t)
   (use-package ivy
@@ -128,32 +141,16 @@
   (use-package avy :ensure t)
 
   (use-package yasnippet :ensure t
-    :init
-    (yas-global-mode 1)
-    :config
+      :defer t
+      :config
     (use-package yasnippet-snippets
       :ensure t)
     (setq yas-snippet-dirs
       '("~/.emacs.d/snippets")))
 
-     (use-package pyvenv :ensure t)
-     (setq exec-path (append exec-path '("C:\\Users\\VNHANGU19\\AppData\\Local\\Programs\\Python\\Python37-32"))) 
-     (defun spacemacs//pyvenv-mode-set-local-virtualenv ()
-       "Set pyvenv virtualenv from \".venv\" by looking in parent directories."
-       (interactive)
-       (let ((root-path (locate-dominating-file default-directory
-						"venv")))
-	 (when root-path
-	   (let* ((file-path (expand-file-name "venv" root-path))
-		  (virtualenv
-		   (with-temp-buffer
-		     (insert-file-contents-literally file-path)
-		     (buffer-substring-no-properties (line-beginning-position)
-						     (line-end-position)))))
-		 (pyvenv-workon virtualenv)))))
-
     (use-package deft
       :bind ("C-x d" . deft)
+	  :defer t
       :commands (deft)
       :init (setq deft-directory "~/Dropbox/Archives"
                     deft-text-mode 'org-mode
@@ -177,10 +174,16 @@
   (setq helm-mode-fuzzy-match t)
   (setq helm-completion-in-region-fuzzy-match t)
   (use-package org-noter
+	:defer t
     :ensure t)
   (pdf-tools-install)
   (use-package helm-ag
+	:defer t
     :ensure t)
+
+(use-package evil
+  :ensure t)
+(evil-mode)
 
   (general-define-key
    :keymap 'globals
@@ -210,6 +213,7 @@
 
   (use-package smartparens
     :ensure t
+	:defer t
     :config
     (add-hook 'lisp-mode-hook #'smartparens-mode)
     (add-hook 'python-mode-hook #'smartparens-mode)
@@ -268,25 +272,27 @@
 (load-user-file "orgfile.el")
 
 (use-package lsp-mode
-  :ensure t)
+  :hook (python-mode . lsp)
+  :commands lsp)
+(setq lsp-auto-configure nil)
+(use-package lsp-python-ms
+  :ensure t
+  :hook (python-mode . (lambda ()
+                          (require 'lsp-python-ms)
+                          (lsp))))  ; or lsp-deferred
+;; optionally
 (use-package lsp-ui :commands lsp-ui-mode)
 (use-package company-lsp :commands company-lsp)
 (use-package helm-lsp :commands helm-lsp-workspace-symbol)
+(gcmh-mode)
 (use-package lsp-treemacs :commands lsp-treemacs-errors-list)
-;; optionally if you want to use debugger
-(use-package dap-mode)
-;; (use-package dap-LANGUAGE) to load the dap adapter for your language
-(setq company-idle-delay 0.1
-      company-minimum-prefix-length 2)
-(use-package lsp-python-ms
-  :ensure t
-  :demand
-  :hook (python-mode . lsp))
-  (use-package dap-mode
-    :ensure t
-    )
-  (require 'dap-python)
-  (setq dap-python-executable "urxvt -hold -e python")
-  (add-hook 'python-mode-hook #'dap-ui-mode)
-(use-package ripgrep
- :ensure t)
+
+(setq company-minimum-prefix-length 1
+      company-idle-delay 0.1
+        company-tooltip-limit 14
+        company-dabbrev-downcase nil
+        company-dabbrev-ignore-case nil
+        company-dabbrev-code-other-buffers t
+        company-tooltip-align-annotations t
+        company-require-match 'never
+	  company-lsp-cache-candidates 'auto)

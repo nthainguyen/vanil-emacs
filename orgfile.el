@@ -629,23 +629,6 @@ Late deadlines first, then scheduled, then non-late deadlines"
 (setq org-yank-adjusted-subtrees t)
 (setq org-deadline-warning-days 30)
 ; Enable habit tracking (and a bunch of other modules)
-(setq org-modules (quote (org-bbdb
-                          org-bibtex
-                          org-crypt
-                          org-gnus
-                          org-id
-                          org-info
-                          org-jsinfo
-                          org-habit
-                          org-inlinetask
-                          org-irc
-                          org-mew
-                          org-mhe
-                          org-protocol
-                          org-rmail
-                          org-vm
-                          org-wl
-                          org-w3m)))
 (setq org-use-speed-commands t)
 (setq org-speed-commands-user (quote (("0" . ignore)
                                       ("1" . ignore)
