@@ -53,8 +53,19 @@ Tangle
 (add-to-list 'super-save-hook-triggers 'focus-out-hook)
 (add-to-list 'super-save-hook-triggers 'find-file-hook)
 (add-to-list 'super-save-triggers 'ace-window)
-  (use-package nimbus-theme)
-  (nimbus-theme)
+(setq ivy-display-style 'fancy)
+(use-package gcmh
+:ensure t)
+(gcmh-mode)
+(setq garbage-collection-messages t)
+  (use-package kaolin-themes
+  :config
+  (load-theme 'kaolin-valley-light t))
+  (use-package spaceline
+    :ensure t
+    :config
+    (require 'spaceline-config)
+    (spaceline-spacemacs-theme))  
   (use-package spaceline
     :ensure t
     :config
@@ -111,6 +122,7 @@ Tangle
 #+BEGIN_SRC emacs-lisp
 (use-package winum :ensure t
 :config
+(setq winum-auto-setup-mode-line nil)
 (winum-mode t))
 #+END_SRC
 #+BEGIN_SRC emacs-lisp
@@ -126,6 +138,10 @@ Tangle
 * Proxy
 #+BEGIN_SRC emacs-lisp
 (setq inhibit-compacting-font-caches t)
+(setq url-proxy-services '((("no_proxy"
+      . "^\\(localhost\\|10\\..*\\|192\\.168\\..*\\)")
+	  ("http"     . "access614.cws.sco.cisco.com:8080")
+        ("https"    . "access614.cws.sco.cisco.com:8080"))))
 #+END_SRC
 * ivy
 #+BEGIN_SRC emacs-lisp
@@ -236,14 +252,6 @@ Tangle
    "C-c z F" 'zd-get-thing-at-point
    "C-c z r" 'zd-file-rename)
 #+END_SRC
-* Evil
-#+BEGIN_SRC emacs-lisp :tangle no
-  (use-package evil
-    :ensure t
-    :init
-    (setq evil-want-keybinding nil))
-    (evil-mode)
-#+END_SRC
 * Uncategorized
 ** Deadgrep
 #+BEGIN_SRC emacs-lisp
@@ -323,28 +331,38 @@ Tangle
 (load-user-file "orgfile.el")
 #+END_SRC
 * Hyperbole
+#+begin_src emacs-lisp :tangle no
+(use-package elpy
+  :ensure t
+  :defer t
+  :init
+  (advice-add 'python-mode :before 'elpy-enable))
+#+end_src
 #+begin_src emacs-lisp
 (use-package lsp-mode
-  :ensure t)
+  :hook (python-mode . lsp)
+  :commands lsp)
+(setq lsp-auto-configure nil)
+(use-package lsp-python-ms
+  :ensure t
+  :hook (python-mode . (lambda ()
+                          (require 'lsp-python-ms)
+                          (lsp))))  ; or lsp-deferred
+;; optionally
 (use-package lsp-ui :commands lsp-ui-mode)
 (use-package company-lsp :commands company-lsp)
 (use-package helm-lsp :commands helm-lsp-workspace-symbol)
+(gcmh-mode)
 (use-package lsp-treemacs :commands lsp-treemacs-errors-list)
-;; optionally if you want to use debugger
-(use-package dap-mode)
-;; (use-package dap-LANGUAGE) to load the dap adapter for your language
-(setq company-idle-delay 0.1
-      company-minimum-prefix-length 2)
-(use-package lsp-python-ms
-  :ensure t
-  :demand
-  :hook (python-mode . lsp))
-  (use-package dap-mode
-    :ensure t
-    )
-  (require 'dap-python)
-  (setq dap-python-executable "urxvt -hold -e python")
-  (add-hook 'python-mode-hook #'dap-ui-mode)
-(use-package ripgrep
- :ensure t)
+#+end_src
+#+begin_src emacs-lisp
+(setq company-minimum-prefix-length 1
+      company-idle-delay 0.1
+        company-tooltip-limit 14
+        company-dabbrev-downcase nil
+        company-dabbrev-ignore-case nil
+        company-dabbrev-code-other-buffers t
+        company-tooltip-align-annotations t
+        company-require-match 'never
+	  company-lsp-cache-candidates 'auto)
 #+end_src
