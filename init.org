@@ -1,5 +1,4 @@
 #+TITLE: Emacs configuration file
-#+AUTHOR: Nguyen Tien Hai
 #+BABEL: :cache yes
 #+PROPERTY: header-args :tangle ~/.emacs.d/init.el
 #+BEGIN_SRC emacs-lisp
@@ -56,7 +55,7 @@ Tangle
 (setq garbage-collection-messages t)
   (use-package kaolin-themes
   :config
-  (load-theme 'kaolin-valley-light t))
+  (load-theme 'kaolin-ocean t))
   (use-package spaceline
     :ensure t
     :config
@@ -90,7 +89,7 @@ Tangle
    display-line-numbers-type 'relative
    echo-keystrokes 0.1               ; Show keystrokes right away, don't show the message in the scratch buffe
    initial-scratch-message nil       ; Empty scratch buffer
-   initial-major-mode 'fundamental      ; org mode by default
+   initial-major-mode 'org-mode      ; org mode by default
    sentence-end-double-space nil     ; Sentences should end in one space, come on!
    confirm-kill-emacs 'y-or-n-p      ; y and n instead of yes and no when quitting
   )
@@ -124,7 +123,9 @@ Tangle
 #+END_SRC
 #+BEGIN_SRC emacs-lisp
   (use-package general
-    :ensure t)
+    :ensure t
+    :config
+    (general-evil-setup t))
 #+END_SRC
 #+BEGIN_SRC emacs-lisp
   (use-package which-key :ensure t
@@ -215,29 +216,83 @@ Tangle
 #+END_SRC
 #+begin_src emacs-lisp
 (use-package evil
-  :ensure t)
-(evil-mode)
+  :ensure t
+  :config
+  (general-evil-setup t)
+  (evil-mode t))
 #+end_src
 * Keybinding with general
 #+BEGIN_SRC emacs-lisp
-  (general-define-key
-   :keymap 'globals
-   "C-f" 'swiper
-   "C-s" 'save-buffer
-   "C-r" nil
-   "C-c p" 'projectile-command-map
-   "C-x C-f" 'counsel-find-file
-   "C-c d" 'deadgrep
-   "C-x m" 'magit-status)
-  (general-define-key
-   :keymap 'globals
-   "C-c z n" 'zd-new-file
-   "C-c z N" 'zd-new-file-and-link
-   "C-c z t" 'zd-avy-tag-search
-   "C-c z f" 'zd-follow-link
-   "C-c z F" 'zd-get-thing-at-point
-   "C-c z r" 'zd-file-rename)
+(general-nmap "RET" (general-key "C-c C-c"))
+(general-imap "n"
+              (general-key-dispatch 'self-insert-command
+		:timeout 0.25
+              "e" 'evil-normal-state))
+(general-def :states '(normal motion) "SPC" nil)
+(general-define-key
+ :keymaps 'global
+ :states '(emacs insert normal motion)
+ "C-f" 'swiper
+ "C-s" 'save-buffer
+ "C-w" 'delete-other-windows
+ "C-x C-f" 'counsel-find-file
+ "C-c z n" 'zd-new-file
+ "C-c z N" 'zd-new-file-and-link
+ "C-c z t" 'zd-avy-tag-search
+ "C-c z f" 'zd-follow-link
+ "C-c z F" 'zd-get-thing-at-point
+ "C-c z r" 'zd-file-rename)
+(general-define-key
+ :keymaps 'global
+ :states '(normal motion visual)
+ :prefix "SPC"
+ ""    nil
+ "SPC" 'counsel-M-x
+ "d"   'counsel-bookmark
+ "1"   'winum-select-window-1
+ "2"   'winum-select-window-2
+ "3"   'winum-select-window-3
+ "4"   'winum-select-window-4
+ "5"   'winum-select-window-5
+ "6"   'winum-select-window-6
+ "7"   'winum-select-window-7
+ "8"   'winum-select-window-8
+ "y"   'counsel-yank-pop
+ "p"   'projectile-command-map
+ "d"   'deadgrep
+ "m"   'magit-status
+ "TAB" '(switch-to-next-buffer :which-key "prev buffer")
+ "f"   '(:ignore t :which-key "files")
+ "ff"  'counsel-find-file
+ "fr"  'counsel-recentf
+ "a"   '(:ignore t :which-key "Applications")
+ "az"  '(:ignore t :which-key "zetteldeft")
+ "af" 'counsel-find-file
+ "an" 'zd-new-file
+ "aN" 'zd-new-file-and-link
+ "at" 'zd-avy-tag-search
+ "af" 'zd-follow-link
+ "aF" 'zd-get-thing-at-point
+ "ar" 'zd-file-rename
+ "ao"  '(:ignore t :which-key "Org mode")
+ "aon" '(org-add-note :wk "Create Note")
+ "aoc" '(counsel-org-capture :which-key "Capture")
+ "aoa" 'air-pop-to-org-agenda
+ "w"   '(hydra-frame-window/body :wk "Windows")
+ ;; Buffer
+ "b"   '(:ignore t :which-key "Buffer")
+ "bb"  '(ivy-switch-buffer :which-key "Change buffer")  ; change buffer, chose using ivy
+ "bs"  '(save-buffer :which-key "Save buffer")
+ "bS"  '(save-some-buffers :which-key "save all buffer")
+ "be"  '(eval-buffer :wk "evaluate buffer")
+ "q"   '(:ignore t :which-key "quick open file")
+ "qi"  '((lambda() (interactive)(find-file "~/.emacs.d/init.el")) :which-key "init")
+ "qo"  '((lambda() (interactive)(find-file "~/.emacs.d/init.org")) :which-key "init")
+)
 #+END_SRC
+
+#+RESULTS:
+
 * Uncategorized
 ** Deadgrep
 #+BEGIN_SRC emacs-lisp
@@ -317,7 +372,7 @@ Tangle
   (load-file (expand-file-name file user-init-dir)))
 (load-user-file "orgfile.el")
 #+END_SRC
-* Hyperbole
+* Python
 #+begin_src emacs-lisp :tangle no
 (use-package elpy
   :ensure t
@@ -342,14 +397,96 @@ Tangle
 (gcmh-mode)
 (use-package lsp-treemacs :commands lsp-treemacs-errors-list)
 #+end_src
+** Company mode
 #+begin_src emacs-lisp
+(use-package company
+  :ensure t
+  :hook 'python-mode
+  :config
 (setq company-minimum-prefix-length 1
       company-idle-delay 0.1
-        company-tooltip-limit 14
-        company-dabbrev-downcase nil
-        company-dabbrev-ignore-case nil
-        company-dabbrev-code-other-buffers t
-        company-tooltip-align-annotations t
-        company-require-match 'never
-	  company-lsp-cache-candidates 'auto)
+      company-tooltip-limit 14
+      company-dabbrev-downcase nil
+      company-dabbrev-ignore-case nil
+      company-dabbrev-code-other-buffers t
+      company-tooltip-align-annotations t
+      company-require-match 'never
+      company-lsp-cache-candidates 'auto))
+#+end_src
+* Org-mode block cosmetic config
+#+begin_src emacs-lisp
+(set-face-attribute 'org-block-begin-line nil :slant
+ 'normal :background nil)
+(with-eval-after-load 'org
+  (defvar-local rasmus/org-at-src-begin -1
+    "Variable that holds whether last position was a ")
+
+  (defvar rasmus/ob-header-symbol ?☰
+    "Symbol used for babel headers")
+
+  (defun rasmus/org-prettify-src--update ()
+    (let ((case-fold-search t)
+          (re "^[ \t]*#\\+begin_src[ \t]+[^ \f\t\n\r\v]+[ \t]*")
+          found)
+      (save-excursion
+        (goto-char (point-min))
+        (while (re-search-forward re nil t)
+          (goto-char (match-end 0))
+          (let ((args (org-trim
+                       (buffer-substring-no-properties (point)
+                                                       (line-end-position)))))
+            (when (org-string-nw-p args)
+              (let ((new-cell (cons args rasmus/ob-header-symbol)))
+                (cl-pushnew new-cell prettify-symbols-alist :test #'equal)
+                (cl-pushnew new-cell found :test #'equal)))))
+        (setq prettify-symbols-alist
+              (cl-set-difference prettify-symbols-alist
+                                 (cl-set-difference
+                                  (cl-remove-if-not
+                                   (lambda (elm)
+                                     (eq (cdr elm) rasmus/ob-header-symbol))
+                                   prettify-symbols-alist)
+                                  found :test #'equal)))
+        ;; Clean up old font-lock-keywords.
+        (font-lock-remove-keywords nil prettify-symbols--keywords)
+        (setq prettify-symbols--keywords (prettify-symbols--make-keywords))
+        (font-lock-add-keywords nil prettify-symbols--keywords)
+        (while (re-search-forward re nil t)
+          (font-lock-flush (line-beginning-position) (line-end-position))))))
+
+  (defun rasmus/org-prettify-src ()
+    "Hide src options via `prettify-symbols-mode'.
+
+  `prettify-symbols-mode' is used because it has uncollpasing. It's
+  may not be efficient."
+    (let* ((case-fold-search t)
+           (at-src-block (save-excursion
+                           (beginning-of-line)
+                           (looking-at "^[ \t]*#\\+begin_src[ \t]+[^ \f\t\n\r\v]+[ \t]*"))))
+      ;; Test if we moved out of a block.
+      (when (or (and rasmus/org-at-src-begin
+                     (not at-src-block))
+                ;; File was just opened.
+                (eq rasmus/org-at-src-begin -1))
+        (rasmus/org-prettify-src--update))
+      ;; Remove composition if at line; doesn't work properly.
+      ;; (when at-src-block
+      ;;   (with-silent-modifications
+      ;;     (remove-text-properties (match-end 0)
+      ;;                             (1+ (line-end-position))
+      ;;                             '(composition))))
+      (setq rasmus/org-at-src-begin at-src-block)))
+
+  (defun rasmus/org-prettify-symbols ()
+    (mapc (apply-partially 'add-to-list 'prettify-symbols-alist)
+          (cl-reduce 'append
+                     (mapcar (lambda (x) (list x (cons (upcase (car x)) (cdr x))))
+                             `(("#+begin_src" . ?✎) ;; ➤ 🖝 ➟ ➤ ✎
+                               ("#+end_src"   . ?✎) ;; ⏹
+                               ("#+header:" . ,rasmus/ob-header-symbol)
+                               ("#+begin_quote" . ?»)
+                               ("#+end_quote" . ?«)))))
+    (turn-on-prettify-symbols-mode)
+    (add-hook 'post-command-hook 'rasmus/org-prettify-src t t))
+  (add-hook 'org-mode-hook #'rasmus/org-prettify-symbols))
 #+end_src
