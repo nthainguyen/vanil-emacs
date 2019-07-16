@@ -486,4 +486,50 @@ Tangle
     (turn-on-prettify-symbols-mode)
     (add-hook 'post-command-hook 'rasmus/org-prettify-src t t))
   (add-hook 'org-mode-hook #'rasmus/org-prettify-symbols))
-#+end_srtc
+  #+end_src
+#+begin_src emacs-lisp
+(use-package evil-matchit
+  :ensure t)
+(use-package rainbow-delimiters :ensure t)
+(add-hook 'emacs-lisp-mode-hook #'rainbow-delimiters-mode)
+(add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
+#+end_src
+#+begin_src emacs-lisp
+
+(defun hai/deft-new-file-named (slug string)
+  "Create a new file named SLUG.
+SLUG is the short file name, without a path or a file extension."
+  (interactive "sNew filename (without extension): ")
+  (let ((file (deft-absolute-filename slug)))
+    (if (file-exists-p file)
+        (message "Aborting, file already exists: %s" file)
+      (deft-auto-populate-title-maybe file)
+      (deft-cache-update-file file)
+      (deft-refresh-filter)
+      (write-region string nil file)
+      )))
+(defun hai/refile (file headline)
+    "Move current headline to specified location"
+    (let ((pos (save-excursion
+                 (find-file file)
+                 (org-find-exact-headline-in-buffer headline))))
+      (org-refile nil nil (list headline file nil pos))))
+
+(defun hai/zd-new-file (str &optional empty)
+  "Create a new deft file.
+Filename is `zd-id-format' appended by STR.
+No file extension needed.
+
+The title is inserted in `org-mode' format (unless EMPTY is true)
+and the file name (without extension) is added to the kill ring.
+When `evil' is loaded, enter instert state."
+(interactive "P")
+(save-excursion
+  (let*  ((zdstr (org-get-heading))
+         (zdId (zd-generate-id))
+         (zdName (concat zdId " " zdstr)))
+  (hai/deft-new-file-named zdName (concat "* " zdName))
+  (org-copy-subtree)
+  (write-region org-subtree-clip nil (deft-absolute-filename zdName))
+  )))
+#+end_src
