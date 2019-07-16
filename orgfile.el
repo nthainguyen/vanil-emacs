@@ -1,3 +1,7 @@
+
+(setq org-refile-use-outline-path 'file)
+(setq ivy-display-style 'fancy)
+(add-to-list 'org-modules 'org-habit)
 (setq org-todo-keywords
       (quote ((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d)")
               (sequence "WAITING(w@/!)" "HOLD(h@/!)" "|" "CANCELLED(c@/!)" "PHONE" "MEETING"))))

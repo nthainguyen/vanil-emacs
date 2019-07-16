@@ -47,15 +47,13 @@ Tangle
 ** Sane defaults
 *** I don't care about auto save and backup files.
 #+BEGIN_SRC emacs-lisp
-(setq org-refile-use-outline-path 'file)
-(setq ivy-display-style 'fancy)
 (use-package gcmh
 :ensure t)
 (gcmh-mode)
 (setq garbage-collection-messages t)
   (use-package kaolin-themes
   :config
-  (load-theme 'kaolin-ocean t))
+  (load-theme 'kaolin-valley-light t))
   (use-package spaceline
     :ensure t
     :config
@@ -182,8 +180,7 @@ Tangle
 * Org takenote
 #+BEGIN_SRC emacs-lisp
     (use-package deft
-      :bind ("C-x d" . deft)
-	  :defer t
+      :defer t
       :commands (deft)
       :init (setq deft-directory "~/Dropbox/Archives"
                     deft-text-mode 'org-mode
@@ -196,8 +193,7 @@ Tangle
           (case-fn . downcase)))
   (setq deft-org-mode-title-prefix t)
   (use-package zetteldeft
-    :load-path "~/.emacs.d/zetteldeft/"
-    :after deft)
+    :load-path "~/.emacs.d/zetteldeft/")
   (use-package helm-org-rifle
     :ensure t)
   (defun hai/helm-org-rifle-archives ()
@@ -227,7 +223,7 @@ Tangle
 (general-imap "n"
               (general-key-dispatch 'self-insert-command
 		:timeout 0.25
-              "e" 'evil-normal-state))
+              "n" 'evil-normal-state))
 (general-def :states '(normal motion) "SPC" nil)
 (general-define-key
  :keymaps 'global
@@ -266,14 +262,15 @@ Tangle
  "ff"  'counsel-find-file
  "fr"  'counsel-recentf
  "a"   '(:ignore t :which-key "Applications")
- "az"  '(:ignore t :which-key "zetteldeft")
- "af" 'counsel-find-file
- "an" 'zd-new-file
- "aN" 'zd-new-file-and-link
- "at" 'zd-avy-tag-search
- "af" 'zd-follow-link
- "aF" 'zd-get-thing-at-point
- "ar" 'zd-file-rename
+ "ad"  '(:ignore t :which-key "zetteldeft")
+ "add" 'deft
+ "adf" 'counsel-find-file
+ "adn" 'zd-new-file
+ "adN" 'zd-new-file-and-link
+ "adt" 'zd-avy-tag-search
+ "adf" 'zd-follow-link
+ "adF" 'zd-get-thing-at-point
+ "adr" 'zd-file-rename
  "ao"  '(:ignore t :which-key "Org mode")
  "aon" '(org-add-note :wk "Create Note")
  "aoc" '(counsel-org-capture :which-key "Capture")
@@ -489,4 +486,4 @@ Tangle
     (turn-on-prettify-symbols-mode)
     (add-hook 'post-command-hook 'rasmus/org-prettify-src t t))
   (add-hook 'org-mode-hook #'rasmus/org-prettify-symbols))
-#+end_src
+#+end_srtc
