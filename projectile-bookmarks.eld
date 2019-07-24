@@ -1,0 +1,1 @@
+("~/technoactivist/" "~/.emacs.d/" "~/todolist/" "~/")

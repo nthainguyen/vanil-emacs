@@ -30,8 +30,6 @@
 (add-to-list 'package-archives '("org" . (concat proto "://orgmode.org/elpa/")))))
 (package-initialize)
 
-(setq org-refile-use-outline-path 'file)
-(setq ivy-display-style 'fancy)
 (use-package gcmh
 :ensure t)
 (gcmh-mode)
@@ -143,7 +141,6 @@
   (use-package avy :ensure t)
 
   (use-package yasnippet :ensure t
-      :defer t
       :config
     (use-package yasnippet-snippets
       :ensure t)
@@ -151,8 +148,7 @@
       '("~/.emacs.d/snippets")))
 
     (use-package deft
-      :bind ("C-x d" . deft)
-	  :defer t
+      :defer t
       :commands (deft)
       :init (setq deft-directory "~/Dropbox/Archives"
                     deft-text-mode 'org-mode
@@ -165,8 +161,7 @@
           (case-fn . downcase)))
   (setq deft-org-mode-title-prefix t)
   (use-package zetteldeft
-    :load-path "~/.emacs.d/zetteldeft/"
-    :after deft)
+    :load-path "~/.emacs.d/zetteldeft/")
   (use-package helm-org-rifle
     :ensure t)
   (defun hai/helm-org-rifle-archives ()
@@ -190,10 +185,6 @@
   (evil-mode t))
 
 (general-nmap "RET" (general-key "C-c C-c"))
-(general-imap "n"
-              (general-key-dispatch 'self-insert-command
-		:timeout 0.25
-              "e" 'evil-normal-state))
 (general-def :states '(normal motion) "SPC" nil)
 (general-define-key
  :keymaps 'global
@@ -232,14 +223,15 @@
  "ff"  'counsel-find-file
  "fr"  'counsel-recentf
  "a"   '(:ignore t :which-key "Applications")
- "az"  '(:ignore t :which-key "zetteldeft")
- "af" 'counsel-find-file
- "an" 'zd-new-file
- "aN" 'zd-new-file-and-link
- "at" 'zd-avy-tag-search
- "af" 'zd-follow-link
- "aF" 'zd-get-thing-at-point
- "ar" 'zd-file-rename
+ "ad"  '(:ignore t :which-key "zetteldeft")
+ "add" 'deft
+ "adf" 'counsel-find-file
+ "adn" 'zd-new-file
+ "adN" 'zd-new-file-and-link
+ "adt" 'zd-avy-tag-search
+ "adf" 'zd-follow-link
+ "adF" 'zd-get-thing-at-point
+ "adr" 'zd-file-rename
  "ao"  '(:ignore t :which-key "Org mode")
  "aon" '(org-add-note :wk "Create Note")
  "aoc" '(counsel-org-capture :which-key "Capture")
@@ -324,16 +316,17 @@
   (load-file (expand-file-name file user-init-dir)))
 (load-user-file "orgfile.el")
 
+(use-package pipenv
+  :hook (python-mode . pipenv-mode)
+  :init
+  (setq
+   pipenv-projectile-after-switch-function
+   #'pipenv-projectile-after-switch-extended))
+
 (use-package lsp-mode
   :hook (python-mode . lsp)
   :commands lsp)
 (setq lsp-auto-configure nil)
-(use-package lsp-python-ms
-  :ensure t
-  :hook (python-mode . (lambda ()
-                          (require 'lsp-python-ms)
-                          (lsp))))  ; or lsp-deferred
-;; optionally
 (use-package lsp-ui :commands lsp-ui-mode)
 (use-package company-lsp :commands company-lsp)
 (use-package helm-lsp :commands helm-lsp-workspace-symbol)
@@ -356,75 +349,54 @@
 
 (set-face-attribute 'org-block-begin-line nil :slant
  'normal :background nil)
-(with-eval-after-load 'org
-  (defvar-local rasmus/org-at-src-begin -1
-    "Variable that holds whether last position was a ")
 
-  (defvar rasmus/ob-header-symbol ?☰
-    "Symbol used for babel headers")
+(use-package evil-matchit
+  :ensure t)
+(use-package rainbow-delimiters :ensure t)
+(add-hook 'emacs-lisp-mode-hook #'rainbow-delimiters-mode)
+(add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
 
-  (defun rasmus/org-prettify-src--update ()
-    (let ((case-fold-search t)
-          (re "^[ \t]*#\\+begin_src[ \t]+[^ \f\t\n\r\v]+[ \t]*")
-          found)
-      (save-excursion
-        (goto-char (point-min))
-        (while (re-search-forward re nil t)
-          (goto-char (match-end 0))
-          (let ((args (org-trim
-                       (buffer-substring-no-properties (point)
-                                                       (line-end-position)))))
-            (when (org-string-nw-p args)
-              (let ((new-cell (cons args rasmus/ob-header-symbol)))
-                (cl-pushnew new-cell prettify-symbols-alist :test #'equal)
-                (cl-pushnew new-cell found :test #'equal)))))
-        (setq prettify-symbols-alist
-              (cl-set-difference prettify-symbols-alist
-                                 (cl-set-difference
-                                  (cl-remove-if-not
-                                   (lambda (elm)
-                                     (eq (cdr elm) rasmus/ob-header-symbol))
-                                   prettify-symbols-alist)
-                                  found :test #'equal)))
-        ;; Clean up old font-lock-keywords.
-        (font-lock-remove-keywords nil prettify-symbols--keywords)
-        (setq prettify-symbols--keywords (prettify-symbols--make-keywords))
-        (font-lock-add-keywords nil prettify-symbols--keywords)
-        (while (re-search-forward re nil t)
-          (font-lock-flush (line-beginning-position) (line-end-position))))))
+(defun hai/deft-new-file-named (slug string)
+  "Create a new file named SLUG.
+SLUG is the short file name, without a path or a file extension."
+  (interactive "sNew filename (without extension): ")
+  (let ((file (deft-absolute-filename slug)))
+    (if (file-exists-p file)
+        (message "Aborting, file already exists: %s" file)
+      (deft-auto-populate-title-maybe file)
+      (deft-cache-update-file file)
+      (deft-refresh-filter)
+      (write-region string nil file)
+      )))
+(defun hai/refile (file headline)
+    "Move current headline to specified location"
+    (let ((pos (save-excursion
+                 (find-file file)
+                 (org-find-exact-headline-in-buffer headline))))
+      (org-refile nil nil (list headline file nil pos))))
 
-  (defun rasmus/org-prettify-src ()
-    "Hide src options via `prettify-symbols-mode'.
+(defun hai/zd-new-file (str &optional empty)
+  "Create a new deft file.
+Filename is `zd-id-format' appended by STR.
+No file extension needed.
 
-  `prettify-symbols-mode' is used because it has uncollpasing. It's
-  may not be efficient."
-    (let* ((case-fold-search t)
-           (at-src-block (save-excursion
-                           (beginning-of-line)
-                           (looking-at "^[ \t]*#\\+begin_src[ \t]+[^ \f\t\n\r\v]+[ \t]*"))))
-      ;; Test if we moved out of a block.
-      (when (or (and rasmus/org-at-src-begin
-                     (not at-src-block))
-                ;; File was just opened.
-                (eq rasmus/org-at-src-begin -1))
-        (rasmus/org-prettify-src--update))
-      ;; Remove composition if at line; doesn't work properly.
-      ;; (when at-src-block
-      ;;   (with-silent-modifications
-      ;;     (remove-text-properties (match-end 0)
-      ;;                             (1+ (line-end-position))
-      ;;                             '(composition))))
-      (setq rasmus/org-at-src-begin at-src-block)))
+The title is inserted in `org-mode' format (unless EMPTY is true)
+and the file name (without extension) is added to the kill ring.
+When `evil' is loaded, enter instert state."
+(interactive "P")
+(save-excursion
+  (let*  ((zdstr (org-get-heading))
+         (zdId (zd-generate-id))
+         (zdName (concat zdId " " zdstr)))
+  (hai/deft-new-file-named zdName (concat "* " zdName))
+  (org-copy-subtree)
+  (write-region org-subtree-clip nil (deft-absolute-filename zdName))
+  )))
 
-  (defun rasmus/org-prettify-symbols ()
-    (mapc (apply-partially 'add-to-list 'prettify-symbols-alist)
-          (cl-reduce 'append
-                     (mapcar (lambda (x) (list x (cons (upcase (car x)) (cdr x))))
-                             `(("#+begin_src" . ?✎) ;; ➤ 🖝 ➟ ➤ ✎
-                               ("#+end_src"   . ?✎) ;; ⏹
-                               ("#+header:" . ,rasmus/ob-header-symbol)
-                               ("#+begin_quote" . ?»)
-                               ("#+end_quote" . ?«)))))
-    (turn-on-prettify-symbols-mode)
-    (add-hook 'post-command-hook 'rasmus/org-prettify-src t t))
-  (add-hook 'org-mode-hook #'rasmus/org-prettify-symbols))
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((python . t)
+   (shell . t)))
+(use-package ox-hugo
+  :ensure t            ;Auto-install the package from Melpa (optional)
+  :after ox)

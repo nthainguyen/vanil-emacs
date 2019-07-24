@@ -16,9 +16,7 @@
  (autoload 'helm-org-rifle-current-buffer-sort-by-latest-timestamp "helm-org-rifle" nil t)
 
 (autoload 'helm-org-rifle-agenda-files "helm-org-rifle" "\
-Rifle through Org agenda files.
-
-\(fn)" t nil)
+Rifle through Org agenda files." t nil)
 
 (autoload 'helm-org-rifle-directories "helm-org-rifle" "\
 Rifle through Org files in DIRECTORIES.
@@ -31,9 +29,7 @@ Files in DIRECTORIES are filtered using
 \(fn &optional DIRECTORIES TOGGLE-RECURSION)" t nil)
 
 (autoload 'helm-org-rifle-org-directory "helm-org-rifle" "\
-Rifle through Org files in `org-directory'.
-
-\(fn)" t nil)
+Rifle through Org files in `org-directory'." t nil)
  (autoload 'helm-org-rifle-occur "helm-org-rifle" nil t)
  (autoload 'helm-org-rifle-occur-current-buffer "helm-org-rifle" nil t)
  (autoload 'helm-org-rifle-occur-directories "helm-org-rifle" nil t)

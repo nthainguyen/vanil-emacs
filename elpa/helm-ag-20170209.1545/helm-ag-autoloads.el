@@ -9,55 +9,31 @@
 ;;;### (autoloads nil "helm-ag" "helm-ag.el" (0 0 0 0))
 ;;; Generated autoloads from helm-ag.el
 
-(autoload 'helm-ag-pop-stack "helm-ag" "\
+(autoload 'helm-ag-pop-stack "helm-ag" nil t nil)
 
+(autoload 'helm-ag-clear-stack "helm-ag" nil t nil)
 
-\(fn)" t nil)
-
-(autoload 'helm-ag-clear-stack "helm-ag" "\
-
-
-\(fn)" t nil)
-
-(autoload 'helm-ag-this-file "helm-ag" "\
-
-
-\(fn)" t nil)
+(autoload 'helm-ag-this-file "helm-ag" nil t nil)
 
 (autoload 'helm-ag "helm-ag" "\
 
 
 \(fn &optional BASEDIR)" t nil)
 
-(autoload 'helm-do-ag-this-file "helm-ag" "\
-
-
-\(fn)" t nil)
+(autoload 'helm-do-ag-this-file "helm-ag" nil t nil)
 
 (autoload 'helm-do-ag "helm-ag" "\
 
 
 \(fn &optional BASEDIR TARGETS)" t nil)
 
-(autoload 'helm-ag-project-root "helm-ag" "\
+(autoload 'helm-ag-project-root "helm-ag" nil t nil)
 
+(autoload 'helm-do-ag-project-root "helm-ag" nil t nil)
 
-\(fn)" t nil)
+(autoload 'helm-ag-buffers "helm-ag" nil t nil)
 
-(autoload 'helm-do-ag-project-root "helm-ag" "\
-
-
-\(fn)" t nil)
-
-(autoload 'helm-ag-buffers "helm-ag" "\
-
-
-\(fn)" t nil)
-
-(autoload 'helm-do-ag-buffers "helm-ag" "\
-
-
-\(fn)" t nil)
+(autoload 'helm-do-ag-buffers "helm-ag" nil t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-ag" '("helm-")))
 
