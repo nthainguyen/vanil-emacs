@@ -1,5 +1,3 @@
-(eval-when-compile
-  (require 'use-package))
 (setq-default gc-cons-threshold 100000000)
 (let ((file-name-handler-alist nil)) "init.el")
 (defun my--tangle-byte-compile-org ()
@@ -29,6 +27,14 @@
 (add-to-list 'package-archives '("gnu" . (concat proto "://elpa.gnu.org/packages/")))
 (add-to-list 'package-archives '("org" . (concat proto "://orgmode.org/elpa/")))))
 (package-initialize)
+
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
+(eval-when-compile (require 'use-package))
+(setq use-package-always-ensure t)
+(eval-when-compile
+  (setq use-package-expand-minimally byte-compile-current-file))
 
 (use-package gcmh
 :ensure t)
@@ -83,14 +89,6 @@
   (setq mouse-wheel-follow-mouse 't)
   (setq mouse-wheel-scroll-amount '(1 ((shift) . 1)))
   (setq custom-safe-themes t)
-
-(unless (package-installed-p 'use-package)
-  (package-refresh-contents)
-  (package-install 'use-package))
-(eval-when-compile (require 'use-package))
-(setq use-package-always-ensure t)
-(eval-when-compile
-  (setq use-package-expand-minimally byte-compile-current-file))
 
 (use-package winum :ensure t
   :defer t
@@ -147,9 +145,69 @@
     (setq yas-snippet-dirs
       '("~/.emacs.d/snippets")))
 
+(general-create-definer my-leader-def :prefix "SPC")
+(general-create-definer my-local-leader-def :prefix ",")
+(general-define-key
+ :keymaps 'global
+ :states '(emacs insert normal motion)
+ "C-f" 'swiper
+ "C-s" 'save-buffer
+ "C-w" 'delete-other-windows)
+(my-leader-def 'normal 
+ "SPC" 'counsel-M-x
+ "d"   'counsel-bookmark
+ "1"   'winum-select-window-1
+ "2"   'winum-select-window-2
+ "3"   'winum-select-window-3
+ "4"   'winum-select-window-4
+ "5"   'winum-select-window-5
+ "6"   'winum-select-window-6
+ "7"   'winum-select-window-7
+ "8"   'winum-select-window-8
+ "y"   'counsel-yank-pop
+ "p"   'projectile-command-map
+ "d"   'deadgrep
+ "m"   'magit-status
+ "TAB" '(switch-to-next-buffer :which-key "prev buffer")
+ "f"   '(:ignore t :which-key "files")
+ "ff"  'counsel-find-file
+ "fr"  'counsel-recentf
+ "a"   '(:ignore t :which-key "Applications")
+ "ad"  '(:ignore t :which-key "zetteldeft")
+ "add" 'deft
+ "adf" 'counsel-find-file
+ "adn" 'zd-new-file
+ "adN" 'zd-new-file-and-link
+ "adt" 'zd-avy-tag-search
+ "adf" 'zd-follow-link
+ "adF" 'zd-get-thing-at-point
+ "adr" 'zd-file-rename
+ "ao"  '(:ignore t :which-key "Org mode")
+ "aon" '(org-add-note :wk "Create Note")
+ "aoc" '(org-capture :which-key "Capture")
+ ;; Buffer
+ "b"   '(:ignore t :which-key "Buffer")
+ "bb"  '(ivy-switch-buffer :which-key "Change buffer")  ; change buffer, chose using ivy
+ "bs"  '(save-buffer :which-key "Save buffer")
+ "bS"  '(save-some-buffers :which-key "save all buffer")
+ "be"  '(eval-buffer :wk "evaluate buffer")
+ "q"   '(:ignore t :which-key "quick open file")
+ "qi"  '((lambda() (interactive)(find-file "~/.emacs.d/init.el")) :which-key "init")
+ "qo"  '((lambda() (interactive)(find-file "~/.emacs.d/init.org")) :which-key "init")
+)
+
     (use-package deft
       :defer t
       :commands (deft)
+      :general
+      (my-local-leader-def 'normal deft-mode-map
+        "f" 'counsel-find-file
+	"n" 'zd-new-file
+	"N" 'zd-new-file-and-link
+	"t" 'zd-avy-tag-search
+	"f" 'zd-follow-link
+	"F" 'zd-get-thing-at-point
+	"r" 'zd-file-rename)
       :init (setq deft-directory "~/Dropbox/Archives"
                     deft-text-mode 'org-mode
                     deft-extensions '("org")
@@ -184,69 +242,7 @@
   (general-evil-setup t)
   (evil-mode t))
 
-(general-nmap "RET" (general-key "C-c C-c"))
-(general-def :states '(normal motion) "SPC" nil)
-(general-define-key
- :keymaps 'global
- :states '(emacs insert normal motion)
- "C-f" 'swiper
- "C-s" 'save-buffer
- "C-w" 'delete-other-windows
- "C-x C-f" 'counsel-find-file
- "C-c z n" 'zd-new-file
- "C-c z N" 'zd-new-file-and-link
- "C-c z t" 'zd-avy-tag-search
- "C-c z f" 'zd-follow-link
- "C-c z F" 'zd-get-thing-at-point
- "C-c z r" 'zd-file-rename)
-(general-define-key
- :keymaps 'global
- :states '(normal motion visual)
- :prefix "SPC"
- ""    nil
- "SPC" 'counsel-M-x
- "d"   'counsel-bookmark
- "1"   'winum-select-window-1
- "2"   'winum-select-window-2
- "3"   'winum-select-window-3
- "4"   'winum-select-window-4
- "5"   'winum-select-window-5
- "6"   'winum-select-window-6
- "7"   'winum-select-window-7
- "8"   'winum-select-window-8
- "y"   'counsel-yank-pop
- "p"   'projectile-command-map
- "d"   'deadgrep
- "m"   'magit-status
- "TAB" '(switch-to-next-buffer :which-key "prev buffer")
- "f"   '(:ignore t :which-key "files")
- "ff"  'counsel-find-file
- "fr"  'counsel-recentf
- "a"   '(:ignore t :which-key "Applications")
- "ad"  '(:ignore t :which-key "zetteldeft")
- "add" 'deft
- "adf" 'counsel-find-file
- "adn" 'zd-new-file
- "adN" 'zd-new-file-and-link
- "adt" 'zd-avy-tag-search
- "adf" 'zd-follow-link
- "adF" 'zd-get-thing-at-point
- "adr" 'zd-file-rename
- "ao"  '(:ignore t :which-key "Org mode")
- "aon" '(org-add-note :wk "Create Note")
- "aoc" '(counsel-org-capture :which-key "Capture")
- "aoa" 'air-pop-to-org-agenda
- "w"   '(hydra-frame-window/body :wk "Windows")
- ;; Buffer
- "b"   '(:ignore t :which-key "Buffer")
- "bb"  '(ivy-switch-buffer :which-key "Change buffer")  ; change buffer, chose using ivy
- "bs"  '(save-buffer :which-key "Save buffer")
- "bS"  '(save-some-buffers :which-key "save all buffer")
- "be"  '(eval-buffer :wk "evaluate buffer")
- "q"   '(:ignore t :which-key "quick open file")
- "qi"  '((lambda() (interactive)(find-file "~/.emacs.d/init.el")) :which-key "init")
- "qo"  '((lambda() (interactive)(find-file "~/.emacs.d/init.org")) :which-key "init")
-)
+
 
   (use-package deadgrep
     :ensure t
@@ -359,7 +355,7 @@
 (defun hai/deft-new-file-named (slug string)
   "Create a new file named SLUG.
 SLUG is the short file name, without a path or a file extension."
-  (interactive "sNew filename (without extension): ")
+  (interactive "New filename (without extension): ")
   (let ((file (deft-absolute-filename slug)))
     (if (file-exists-p file)
         (message "Aborting, file already exists: %s" file)
@@ -368,12 +364,7 @@ SLUG is the short file name, without a path or a file extension."
       (deft-refresh-filter)
       (write-region string nil file)
       )))
-(defun hai/refile (file headline)
-    "Move current headline to specified location"
-    (let ((pos (save-excursion
-                 (find-file file)
-                 (org-find-exact-headline-in-buffer headline))))
-      (org-refile nil nil (list headline file nil pos))))
+
 
 (defun hai/zd-new-file (str &optional empty)
   "Create a new deft file.
@@ -388,9 +379,9 @@ When `evil' is loaded, enter instert state."
   (let*  ((zdstr (org-get-heading))
          (zdId (zd-generate-id))
          (zdName (concat zdId " " zdstr)))
-  (hai/deft-new-file-named zdName (concat "* " zdName))
   (org-copy-subtree)
-  (write-region org-subtree-clip nil (deft-absolute-filename zdName))
+  (append-to-file (concat "#+TITLE: " (zd-lift-file-title (deft-absolute-filename zdName)) "\n") nil (deft-absolute-filename zdName))
+  (append-to-file org-subtree-clip nil (deft-absolute-filename zdName))
   )))
 
 (org-babel-do-load-languages
