@@ -60,7 +60,7 @@ Tangle
 (setq garbage-collection-messages t)
   (use-package kaolin-themes
   :config
-  (load-theme 'kaolin-ocean t))
+  (load-theme 'kaolin-light t))
   (use-package spaceline
     :ensure t
     :config
@@ -181,11 +181,13 @@ Tangle
 (general-define-key
  :keymaps 'global
  :states '(emacs insert normal motion)
+ "/" nil
  "C-f" 'swiper
  "C-s" 'save-buffer
  "C-w" 'delete-other-windows)
-(my-leader-def 'normal 
+(my-leader-def '(normal motion visual) 
  "SPC" 'counsel-M-x
+ "h"   'hyperbole
  "d"   'counsel-bookmark
  "1"   'winum-select-window-1
  "2"   'winum-select-window-2
@@ -356,7 +358,6 @@ Tangle
   (interactive "f")
   "Load a file in current user's configuration directory"
   (load-file (expand-file-name file user-init-dir)))
-(load-user-file "orgfile.el")
 #+END_SRC
 * Python
 #+begin_src emacs-lisp :tangle no
@@ -415,6 +416,7 @@ Tangle
 #+end_src
 * Create deft file from headline
 #+begin_src emacs-lisp
+(setq zd-tag-regex "\b\([A-Z]+[a-z]+\)\{2,\}")
 (defun hai/deft-new-file-named (slug string)
   "Create a new file named SLUG.
 SLUG is the short file name, without a path or a file extension."
@@ -457,3 +459,47 @@ When `evil' is loaded, enter instert state."
   :ensure t            ;Auto-install the package from Melpa (optional)
   :after ox)
 #+end_src
+#+begin_src emacs-lisp
+(setq org-agenda-files (list "~/Dropbox/orggtd/refile.org"
+                             "~/Dropbox/orggtd/habit.org" 
+                             "~/Dropbox/orggtd/main.org"))
+(setq org-habit-preceding-days 21)
+(setq org-habit-following-days 5)
+(setq org-habit-graph-column 54)
+(setq org-refile-use-outline-path 'file)
+(setq org-use-fast-todo-selection t)
+(setq org-treat-S-cursor-todo-selection-as-state-change nil)
+(require 'org-habit)
+(setq org-todo-keyword-faces
+      (quote (("TODO" :foreground "red" :weight bold)
+              ("NEXT" :foreground "blue" :weight bold)
+              ("DONE" :foreground "forest green" :weight bold)
+              ("HOLD" :foreground "magenta" :weight bold)
+              ("CANCELLED" :foreground "forest green" :weight bold))))
+(setq org-capture-templates
+      (quote (("t" "todo" entry (file "~/Dropbox/orggtd/refile.org")
+               "* TODO %?\n%U\n%a\n")
+              ("d" "ToDo Entry" entry (file "~/Dropbox/Archives/designs.org") (file "~/Dropbox/orggtd/tpl-design.org") :empty-lines-before 1)
+              ("h" "Habit" entry (file "~/Dropbox/orggtd/habit.org")
+               "* NEXT %?\n%U\n%a\nSCHEDULED: %(format-time-string \"%<<%Y-%m-%d %a .+1d/3d>>\")\n:PROPERTIES:\n:STYLE: habit\n:REPEAT_TO_STATE: NEXT\n:END:\n"))))
+#+end_src
+
+#+BEGIN_SRC emacs-lisp
+(add-hook 'org-mode-hook (lambda () "Beautify Org Checkbox Symbol" 
+(push '("[ ]" . "☐") prettify-symbols-alist) 
+(push '("[X]" . "☑" ) prettify-symbols-alist) 
+(push '("[-]" . "❍" ) prettify-symbols-alist) 
+(push '("#+BEGIN_SRC" . "↦" ) prettify-symbols-alist) 
+(push '("#+END_SRC" . "⇤" ) prettify-symbols-alist) 
+(push '("#+BEGIN_EXAMPLE" . "↦" ) prettify-symbols-alist) 
+(push '("#+END_EXAMPLE" . "⇤" ) prettify-symbols-alist) 
+(push '("#+BEGIN_QUOTE" . "↦" ) prettify-symbols-alist) 
+(push '("#+END_QUOTE" . "⇤" ) prettify-symbols-alist) 
+(push '("#+begin_quote" . "↦" ) prettify-symbols-alist) 
+(push '("#+end_quote" . "⇤" ) prettify-symbols-alist) 
+(push '("#+begin_example" . "↦" ) prettify-symbols-alist) 
+(push '("#+end_example" . "⇤" ) prettify-symbols-alist) 
+(push '("#+begin_src" . "↦" ) prettify-symbols-alist) 
+(push '("#+end_src" . "⇤" ) prettify-symbols-alist) 
+(prettify-symbols-mode)))
+#+END_SRC
